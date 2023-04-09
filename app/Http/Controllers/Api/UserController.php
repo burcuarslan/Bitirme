@@ -94,6 +94,8 @@
          * @param \App\Models\user         $user
          *
          * @return \Illuminate\Http\Response
+         *
+         *
          */
         public function update(Request $request, user $user)
         {
