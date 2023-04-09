@@ -8,14 +8,22 @@
     use GuzzleHttp\Client;
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\Http;
+    use PhpParser\Node\Expr\Cast\Object_;
+    use Tymon\JWTAuth\Exceptions\JWTException;
+    use Tymon\JWTAuth\Facades\JWTAuth;
+    use winTypes;
 
     class ValorantApiController extends ResponseController
     {
+        private string $recipientPuuId;
         private string $region;
         private string $userName;
         private string $tagline;
         private string $filter = "";
-
+        private string $team;
+        const WIN  = "Win";
+        const LOSE = "Lose";
+        const DROW = "Drow";
 
         private array $userDetailHeader = [
             'authority'          => 'api.henrikdev.xyz',
@@ -56,44 +64,135 @@
         public function getMatches(Request $request)
         {
 
-            $this->region = $request->region;
+            try {
+                $jwt = JWTAuth::parseToken()->authenticate();
+            } catch (JWTException $e) {
+                return $this->apiResponse(null, $e->getMessage(), 400);
+            }
+
+
+            $this->region         = $jwt->region;
+            $this->recipientPuuId = $jwt->puuId;
+            $this->userName       = $jwt->userName;
+            $this->tagline        = $jwt->tagline;
 //            $this->userName = $request->userName;
 //            $this->tagline  = $request->tagline;
             $this->filter = $request->filter ? $request->filter : "";
 
             if ($this->filter == null) {
-                $url = "https://api.henrikdev.xyz/valorant/v3/by-puuid/matches/" . $this->region . "/" . $request->recipientPuuId;
+                $url = "https://api.henrikdev.xyz/valorant/v3/matches/" . $this->region . "/" . $this->userName . "/" . $this->tagline;
             } else {
-                $url = "https://api.henrikdev.xyz/valorant/v3/by-puuid/matches/" . $this->region . "/" . $request->recipientId . "/" . $this->filter;
+                $url = "https://api.henrikdev.xyz/valorant/v3/matches/" . $this->region . "/" . $this->userName . "/" . $this->tagline. "/" . $this->filter;
 
             }
             //return $url;
             $response = Http::withHeaders($this->matchHeader)->get($url);
-            //return $response;
+//            return $response;
 
+            $detail = [];
             if ($response->successful()) {
                 $jsonResponse = json_decode($response);
                 //return $jsonResponse;
-                $lastMatch = $jsonResponse->data[0];
-                $metadata  = $lastMatch->metadata;
-                $players   = $lastMatch->players->all_players;
-                foreach ($players as $player) {
-                    if ($player->puuid == $request->providerPuuId) {
-                        return $player;
+                if ($jsonResponse->data == null) {
+                    return $this->apiResponse([], "No data found", 200);
+                }
+                $lastMatch = $jsonResponse->data[1];
+                //return $lastMatch;
+//                return $jsonResponse->data;
+                $metadata = $lastMatch->metadata;
+                $players  = $lastMatch->players->all_players;
+                $teams    = $lastMatch->teams;
+
+
+                for ($i = 0; $i < count($jsonResponse->data); $i++) {
+
+                    $detail[$i]['matchId'] = $jsonResponse->data[$i]->metadata->matchid;
+                    $detail[$i]['map']     = $jsonResponse->data[$i]->metadata->map;
+                    $detail[$i]['mode']    = $jsonResponse->data[$i]->metadata->mode;
+                    $detail[$i]['region']  = $jsonResponse->data[$i]->metadata->region;
+
+                    $detail[$i]['cluster'] = $jsonResponse->data[$i]->metadata->cluster;
+                    $detail[$i]['region']  = $jsonResponse->data[$i]->metadata->region;
+                    foreach ($jsonResponse->data[$i]->players->all_players as $player) {
+                        if ($player->puuid == $this->recipientPuuId) {
+                            $detail[$i]['findUser'] = $player;
+                        }
+                    }
+                    if ($detail[$i]['findUser']->team == "Blue") {
+                        if ($jsonResponse->data[$i]->teams->blue->has_won) {
+                            $detail[$i]['wonRound']  = $jsonResponse->data[$i]->teams->blue->rounds_won;
+                            $detail[$i]['lostRound'] = $jsonResponse->data[$i]->teams->blue->rounds_lost;
+                            $detail[$i]['win']       = self::WIN;
+
+                        } else {
+                            $detail[$i]['wonRound']  = $jsonResponse->data[$i]->teams->blue->rounds_won;
+                            $detail[$i]['lostRound'] = $jsonResponse->data[$i]->teams->blue->rounds_lost;
+                            $detail[$i]['win']       = self::LOSE;
+                        }
+
+                    }  elseif ($detail[$i]['findUser']->team == "Red") {
+                        if ($jsonResponse->data[$i]->teams->red->has_won) {
+                            $detail[$i]['wonRound']  = $jsonResponse->data[$i]->teams->red->rounds_won;
+                            $detail[$i]['lostRound'] = $jsonResponse->data[$i]->teams->red->rounds_lost;
+                            $detail[$i]['win']       = self::WIN;
+
+                        } else {
+                            $detail[$i]['wonRound']  = $jsonResponse->data[$i]->teams->red->rounds_won;
+                            $detail[$i]['lostRound'] = $jsonResponse->data[$i]->teams->red->rounds_lost;
+                            $detail[$i]['win']       = self::LOSE;
+                        }
+
+                    }else {
+//                        return $this->apiResponse($jsonResponse->data[$i], "zaaaaaaaa", 200);
+                        $detail[$i]['win']       = self::DROW;
+                        $detail[$i]['wonRound']  = $jsonResponse->data[$i]->teams->red->rounds_won;
+                        $detail[$i]['lostRound'] = $jsonResponse->data[$i]->teams->red->rounds_lost;
                     }
                 }
-                return $players;
-                $map          = $metadata->map;
-                $gameLenght   = $metadata->game_length;
-                $gameStart    = $metadata->game_start;
-                $roundsPlayer = $metadata->rounds_player;
-                $gameMode     = $metadata->mode;
-                $matchId      = $metadata->matchid;
-                $region       = $metadata->region;
-                $cluster      = $metadata->cluster;
-                $queue        = $metadata->queue;
+                return $this->apiResponse($detail, "zaaaaaaaa", 200);
+                //return $players;
+//                $findUser=null;
+//                foreach ($players as $player) {
+//                    if ($player->puuid == $request->providerPuuId) {
+//                        $findUser   = $player;
+////                        $this->team = $player->team;
+//
+//                    }
+//                }
+//                return $findUser;
+//
+//
 
-                return $this->apiResponse();
+//                $map        = $metadata->map;
+//                $gameLenght = $metadata->game_length;
+//                $gameStart  = $metadata->game_start;
+//                //$roundsPlayer = $metadata->rounds_player;
+//                $gameMode = $metadata->mode;
+//                $matchId  = $metadata->matchid;
+//                $region   = $metadata->region;
+//                $cluster  = $metadata->cluster;
+//                $queue    = $metadata->queue;
+
+
+//                $detail = array(
+//                    [
+//                        'map'        => $map,
+//                        'gameLenght' => $gameLenght,
+//                        'gameStart'  => $gameStart,
+//                        'gameMode'   => $gameMode,
+//                        'matchId'    => $matchId,
+//                        'region'     => $region,
+//                        'cluster'    => $cluster,
+//                        'queue'      => $queue,
+//                        'findUser'   => $findUser,
+//                        'teams'      => $teams,
+//                        'win'        => $win,
+//                        'wonRound'   => $wonRound,
+//                        'lostRound'  => $lostRound,
+//
+//                    ]
+//                );
+                return $this->apiResponse($detail, 'User Detail', 200);
             } else {
                 return $this->apiResponse($response->body(), 'Failed to get matches.', 400);
             }
@@ -148,62 +247,5 @@
 
         }
 
-        /**
-         * Display a listing of the resource.
-         *
-         * @return \Illuminate\Http\Response
-         */
-        public function index()
-        {
-            //
-        }
 
-        /**
-         * Store a newly created resource in storage.
-         *
-         * @param \Illuminate\Http\Request $request
-         *
-         * @return \Illuminate\Http\Response
-         */
-        public function store(Request $request)
-        {
-            //
-        }
-
-        /**
-         * Display the specified resource.
-         *
-         * @param int $id
-         *
-         * @return \Illuminate\Http\Response
-         */
-        public function show($id)
-        {
-            //
-        }
-
-        /**
-         * Update the specified resource in storage.
-         *
-         * @param \Illuminate\Http\Request $request
-         * @param int                      $id
-         *
-         * @return \Illuminate\Http\Response
-         */
-        public function update(Request $request, $id)
-        {
-            //
-        }
-
-        /**
-         * Remove the specified resource from storage.
-         *
-         * @param int $id
-         *
-         * @return \Illuminate\Http\Response
-         */
-        public function destroy($id)
-        {
-            //
-        }
     }

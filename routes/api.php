@@ -20,7 +20,11 @@
 
     Route::resource('wallet', 'App\Http\Controllers\Api\WalletController');
     Route::resource('users', 'App\Http\Controllers\Api\UserController')->middleware('userMiddleware');
-    Route::post('login', 'App\Http\Controllers\Api\LoginController@login')->middleware('loginMiddleware');
+    Route::post('login', 'App\Http\Controllers\Api\LoginController@login');
     Route::post('register', 'App\Http\Controllers\Api\RegisterController@register');
-    Route::post('getMatches', 'App\Http\Controllers\Api\ValorantApiController@getMatches');
+    Route::get('getMatches', 'App\Http\Controllers\Api\ValorantApiController@getMatches');
     Route::post('getUserDetail', 'App\Http\Controllers\Api\ValorantApiController@getUserDetail');
+    Route::resource('price', 'App\Http\Controllers\Api\PriceController');
+    Route::resource('order', 'App\Http\Controllers\Api\OrderController');
+    Route::get('user',[App\Http\Controllers\Api\UserController::class, 'getUser']);
+    Route::post('update',[App\Http\Controllers\Api\UserController::class, 'update']);

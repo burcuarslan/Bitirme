@@ -22,7 +22,7 @@
             $validator = Validator::make($request->toArray(), [
                 'name'        => 'required',
                 'surname'     => 'required',
-                'email'       => 'required|email',
+                'email'       => 'required|email|unique:users',
                 'userName'    => 'required',
                 'tagline'     => 'required',
                 'region'      => 'required',

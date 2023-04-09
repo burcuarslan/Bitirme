@@ -16,15 +16,15 @@
                 $table->id();
                 $table->integer('userId')->unique()->unsigned();
                 //$table->enum('rank', ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'ascendant', 'immortal', 'radiant']);
-                $table->string('rank');
+                $table->string('rank')->nullable();
                 $table->integer('kda')->nullable();
                 $table->integer('winRate')->nullable();
                 $table->integer('rating')->nullable();
-                $table->integer('currentTier');
-                $table->integer('rankingInTier');
-                $table->integer('mmrChangeToLastGame');
-                $table->integer('elo');
-                $table->boolean('old');
+                $table->integer('currentTier')->nullable();
+                $table->integer('rankingInTier')->nullable();
+                $table->integer('mmrChangeToLastGame')->nullable();
+                $table->integer('elo')->nullable();
+                $table->boolean('old')->nullable();
                 //  $table->integer('gameCharachterId')->unsigned();
 
                 $table->foreign('userId')->references('id')->on('users')->name('fk_statistics_users');

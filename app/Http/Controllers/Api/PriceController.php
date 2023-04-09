@@ -3,30 +3,20 @@
     namespace App\Http\Controllers\Api;
 
     use App\Http\Controllers\Controller;
+    use App\Models\Price;
     use Exception;
-    use Illuminate\Database\QueryException;
     use Illuminate\Http\Request;
+    use Namshi\JOSE\JWT;
+    use Tymon\JWTAuth\Exceptions\JWTException;
+    use Tymon\JWTAuth\Facades\JWTAuth;
 
-    class RegisterController extends ResponseController
+    class PriceController extends ResponseController
     {
 
         public function __construct()
         {
-            $this->middleware('userMiddleware');
+            $this->middleware('priceMiddleware')->only('store');
         }
-
-        public function register(Request $request)
-        {
-            try {
-                $user = app('App\Http\Controllers\Api\UserController')->store($request);
-                return $this->apiResponse($user->getData()->data, 'User created successfully.', 200);
-            } catch (Exception $e) {
-                return $this->apiResponse(null, $e->getMessage(), 400);
-            } catch (QueryException $e) {
-                return $this->apiResponse(null, $e->getMessage(), 400);
-            }
-        }
-
         /**
          * Display a listing of the resource.
          *
@@ -34,7 +24,8 @@
          */
         public function index()
         {
-            //
+
+            return $this->apiResponse(Price::getAllPrices(), 'Prices listed successfully', 200);
         }
 
         /**
@@ -47,8 +38,28 @@
         public function store(Request $request)
         {
 
-        }
+            try {
+                $jwt = JWTAuth::parseToken()->authenticate();
 
+            } catch (JWTException $e) {
+                return $this->apiResponse(null, $e->getMessage(), 400);
+            }
+            $price             = new Price();
+            $price->providerId = $jwt->id;
+            $price->categoryId = $request->categoryId;
+
+            $second                = $request->priceMinute * 60;
+            $price->pricePerMinute = $request->pricePerMinute;
+            $price->priceSecond    = $second;
+            $price->price          = $request->priceMinute * $request->pricePerMinute;
+            $isSuccess             = $price->save();
+            if ($isSuccess) {
+                return $this->apiResponse($price, 'Price created successfully', 200);
+            } else {
+                return throw new Exception('Price could not be created.');
+            }
+
+        }
 
         /**
          * Display the specified resource.
@@ -59,7 +70,7 @@
          */
         public function show($id)
         {
-            //
+
         }
 
         /**

@@ -3,12 +3,21 @@
     namespace App\Http\Controllers\Api;
 
     use App\Http\Controllers\Controller;
-    use App\Models\wallet;
+    use App\Models\Order;
+    use Carbon\Carbon;
     use Exception;
     use Illuminate\Http\Request;
+    use App\Http\Enum\OrderStatus;
 
-    class WalletController extends ResponseController
+
+    class OrderController extends ResponseController
     {
+
+        public function __construct()
+        {
+            $this->middleware('orderMiddleware')->only('store');
+        }
+
         /**
          * Display a listing of the resource.
          *
@@ -26,28 +35,33 @@
          *
          * @return \Illuminate\Http\Response
          */
-        public function store(int $id)
+        public function store(Request $request)
         {
-            $wallet          = new Wallet();
-            $wallet->userId  = $id;
-            $wallet->balance = 0.00;
-            $isSuccess=$wallet->save();
-            if ($isSuccess) {
-                return true;
-            } else {
-                throw new Exception('An error occurred while creating the wallet! Please try again.');
-            }
+            $order              = new Order();
+            $order->recipientId = $request->recipientId;
+            $order->providerId  = $request->providerId;
+            $order->priceId     = $request->priceId;
+            $order->status      = OrderStatus::PENDING;
+            $order->createdAt   = Carbon::now();
+            $order->description = $request->description;
+            $isSuccess          = $order->save();
 
+            if ($isSuccess) {
+
+                return $this->apiResponse($order, 'Order created successfully', 200);
+            } else {
+                return throw new Exception('Order could not be created.');
+            }
         }
 
         /**
          * Display the specified resource.
          *
-         * @param \App\Models\wallet $wallet
+         * @param int $id
          *
          * @return \Illuminate\Http\Response
          */
-        public function show(wallet $wallet)
+        public function show($id)
         {
             //
         }
@@ -56,26 +70,25 @@
          * Update the specified resource in storage.
          *
          * @param \Illuminate\Http\Request $request
-         * @param \App\Models\wallet       $wallet
+         * @param int                      $id
          *
          * @return \Illuminate\Http\Response
          */
-        public function update(Request $request, wallet $wallet)
+        public function update(Request $request, $id)
         {
-            //
+//            $order=Order::find($id);
+//            $order->comp
         }
 
         /**
          * Remove the specified resource from storage.
          *
-         * @param \App\Models\wallet $wallet
+         * @param int $id
          *
          * @return \Illuminate\Http\Response
          */
-        public function destroy(wallet $wallet)
+        public function destroy($id)
         {
             //
         }
-
-
     }

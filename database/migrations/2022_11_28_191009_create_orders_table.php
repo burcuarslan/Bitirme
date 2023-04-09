@@ -22,6 +22,7 @@ return new class extends Migration
             $table->dateTime('createdAt')->nullable();
             $table->dateTime('completedAt')->nullable();
             $table->dateTime('canceledAt')->nullable();
+            $table->enum('isWin',['win','tie','lose'])->nullable();
             $table->boolean('isSuccess')->default(false);
             $table->string('description');
 
