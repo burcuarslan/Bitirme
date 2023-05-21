@@ -48,10 +48,7 @@
             $price->providerId = $jwt->id;
             $price->categoryId = $request->categoryId;
 
-            $second                = $request->priceMinute * 60;
-            $price->pricePerMinute = $request->pricePerMinute;
-            $price->priceSecond    = $second;
-            $price->price          = $request->priceMinute * $request->pricePerMinute;
+            $price->price          = $request->price;
             $isSuccess             = $price->save();
             if ($isSuccess) {
                 return $this->apiResponse($price, 'Price created successfully', 200);

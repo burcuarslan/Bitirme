@@ -2,6 +2,7 @@
 
     namespace App\Http\Middleware\Api;
 
+    use App\Http\Enum\OrderStatus;
     use Closure;
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\Validator;
@@ -21,6 +22,24 @@
                 return $validator->errors();
             } else {
                 return true;
+            }
+        }
+
+        private function checkIfUserIsProvider(Request $request)
+        {
+            $user = JWTAuth::parseToken()->authenticate();
+            if ($user->id == $request->providerId) {
+                $isTrue = $request->validate([
+                                                 'status' => 'required|in:' . OrderStatus::CANCELED, OrderStatus::COMPLETED, OrderStatus::IN_PROGRESS
+                                             ]);
+                return $isTrue;
+            } elseif ($user->id == $request->recipientId) {
+                $isTrue = $request->validate([
+                                                 'status' => 'required|in:' . OrderStatus::CANCELED
+                                             ]);
+                return $isTrue;
+            } else {
+                return false;
             }
         }
 

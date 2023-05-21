@@ -13,9 +13,9 @@
         {
             $validator = Validator::make($request->toArray(), [
 //                'providerId'     => 'required|integer|exists:users,id',
-                'categoryId'     => 'required|integer|exists:match_categories,id',
-                'pricePerMinute' => 'required|numeric:2',
-                'priceMinute'    => 'required|numeric:2',
+'categoryId' => 'required|integer|exists:match_categories,id',
+'price'      => 'required|numeric:2',
+
 
             ]);
             if ($validator->fails()) {

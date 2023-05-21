@@ -28,3 +28,6 @@
     Route::resource('order', 'App\Http\Controllers\Api\OrderController');
     Route::get('user',[App\Http\Controllers\Api\UserController::class, 'getUser']);
     Route::post('update',[App\Http\Controllers\Api\UserController::class, 'update']);
+    Route::put('updateOrder',[App\Http\Controllers\Api\OrderController::class, 'updateOrder']);
+
+    Route::post('getMatchResult', 'App\Http\Controllers\Api\ValorantApiController@getMatchResult');

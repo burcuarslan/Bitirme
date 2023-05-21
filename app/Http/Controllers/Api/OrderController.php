@@ -8,6 +8,7 @@
     use Exception;
     use Illuminate\Http\Request;
     use App\Http\Enum\OrderStatus;
+    use Tymon\JWTAuth\Facades\JWTAuth;
 
 
     class OrderController extends ResponseController
@@ -16,6 +17,7 @@
         public function __construct()
         {
             $this->middleware('orderMiddleware')->only('store');
+            $this->middleware('checkUserforOrderUpdate')->only('updateOrder');
         }
 
         /**
@@ -25,7 +27,10 @@
          */
         public function index()
         {
-            //
+
+                $user = JWTAuth::parseToken()->authenticate();
+                $orders = Order::where('recipientId', $user->id)->with('user')->with('price')->get();
+                return $this->apiResponse($orders, 'Orders listed successfully', 200);
         }
 
         /**
@@ -74,10 +79,20 @@
          *
          * @return \Illuminate\Http\Response
          */
-        public function update(Request $request, $id)
+        public function updateOrder(Request $request)
         {
-//            $order=Order::find($id);
-//            $order->comp
+            try {
+                $user          = JWTAuth::parseToken()->authenticate();
+                $order         = Order::find($request->id);
+                $order->status = $request->status;
+                $order->save();
+                return $this->apiResponse($order, 'Order updated successfully', 200);
+
+            } catch (JWTException $e) {
+                return $this->apiResponse(null, $e->getMessage(), 400);
+            }
+
+
         }
 
         /**

@@ -3,6 +3,7 @@
     namespace App\Http\Controllers\Api;
 
     use App\Http\Controllers\Controller;
+    use App\Models\Order;
     use App\Models\Statistic;
     use Exception;
     use GuzzleHttp\Client;
@@ -16,6 +17,8 @@
     class ValorantApiController extends ResponseController
     {
         private string $recipientPuuId;
+
+        private object $me;
         private string $region;
         private string $userName;
         private string $tagline;
@@ -82,7 +85,7 @@
             if ($this->filter == null) {
                 $url = "https://api.henrikdev.xyz/valorant/v3/matches/" . $this->region . "/" . $this->userName . "/" . $this->tagline;
             } else {
-                $url = "https://api.henrikdev.xyz/valorant/v3/matches/" . $this->region . "/" . $this->userName . "/" . $this->tagline. "/" . $this->filter;
+                $url = "https://api.henrikdev.xyz/valorant/v3/matches/" . $this->region . "/" . $this->userName . "/" . $this->tagline . "/" . $this->filter;
 
             }
             //return $url;
@@ -130,7 +133,7 @@
                             $detail[$i]['win']       = self::LOSE;
                         }
 
-                    }  elseif ($detail[$i]['findUser']->team == "Red") {
+                    } elseif ($detail[$i]['findUser']->team == "Red") {
                         if ($jsonResponse->data[$i]->teams->red->has_won) {
                             $detail[$i]['wonRound']  = $jsonResponse->data[$i]->teams->red->rounds_won;
                             $detail[$i]['lostRound'] = $jsonResponse->data[$i]->teams->red->rounds_lost;
@@ -142,7 +145,7 @@
                             $detail[$i]['win']       = self::LOSE;
                         }
 
-                    }else {
+                    } else {
 //                        return $this->apiResponse($jsonResponse->data[$i], "zaaaaaaaa", 200);
                         $detail[$i]['win']       = self::DROW;
                         $detail[$i]['wonRound']  = $jsonResponse->data[$i]->teams->red->rounds_won;
@@ -247,5 +250,95 @@
 
         }
 
+        public function getMatchResult(Request $request)
+        {
+            try {
+                $jwt = JWTAuth::parseToken()->authenticate();
+            } catch (JWTException $e) {
+                return $this->apiResponse(null, $e->getMessage(), 400);
+            }
+
+            $userr                = $request->user;
+            $this->region         = $jwt->region;
+            $this->recipientPuuId = $jwt->puuId;
+            $this->userName       = $jwt->userName;
+            $this->tagline        = $jwt->tagline;
+//            $this->userName = $request->userName;
+//            $this->tagline  = $request->tagline;
+            $this->filter = $request->filter ? $request->filter : "";
+
+            if ($this->filter == null) {
+                $url = "https://api.henrikdev.xyz/valorant/v3/matches/" . $this->region . "/" . $this->userName . "/" . $this->tagline;
+            } else {
+                $url = "https://api.henrikdev.xyz/valorant/v3/matches/" . $this->region . "/" . $this->userName . "/" . $this->tagline . "/" . $this->filter;
+
+            }
+            //return $url;
+            $response = Http::withHeaders($this->matchHeader)->get($url);
+//            return $response;
+
+            $detail = [];
+            if ($response->successful()) {
+                $jsonResponse = json_decode($response);
+                //return $jsonResponse;
+                if ($jsonResponse->data == null) {
+                    return $this->apiResponse([], "No data found", 200);
+                }else {
+
+                    foreach ($jsonResponse->data as $match) {
+
+                        $lastMatch = $match;
+//                        return $lastMatch;
+//                return $jsonResponse->data;
+                        $metadata    = $lastMatch->metadata;
+                        $players     = $lastMatch->players->all_players;
+                        $redTeam     = $lastMatch->players->red;
+                        $blueTeam    = $lastMatch->players->blue;
+                        $teams       = $lastMatch->teams;
+                        $mePuuid     = $jwt->puuId;
+//                        $matchWin    = true;
+                        $winningTeam = $lastMatch->rounds[0]->winning_team;
+                        $temp        = null;
+                        foreach ($players as $player) {
+                            $player->puuid == $mePuuid ? $temp = $player : null;
+//                            return $userr;
+                        }
+//                        return $players;
+                        foreach ($players as $player) {
+
+                            if ($player->puuid == $userr) {
+//                                 return $player->puuid;
+                                if ($player->team == $temp->team) {
+                                    $statistic = $player->team == "Red" ? $redTeam : $blueTeam;
+                                    $temp->team == $winningTeam ? $matchWin = true : $matchWin = false;
+                                    foreach ($statistic as $stat) {
+                                        if ($stat->puuid == $userr) {
+                                            Order::where('id', $request->orderId)->update([
+                                                                                              'isWin'             => $matchWin ? 1 : 3,
+                                                                                              'status'            => 'COMPLETED',
+                                                                                              'providerKills'     => $stat->stats->kills,
+                                                                                              'providerDeaths'    => $stat->stats->deaths,
+                                                                                              'providerAssists'   => $stat->stats->assists,
+                                                                                              'providerBodyShots' => $stat->stats->bodyshots,
+                                                                                              'providerHeadShots' => $stat->stats->headshots,
+                                                                                              'providerLegShots'  => $stat->stats->legshots,
+                                                                                          ]);
+                                        }
+                                    }
+
+                                    return $this->apiResponse($matchWin, "Maç sonucu başarıyla kaydedildi.", 200);
+                                }
+                                return $this->apiResponse(null, "Aynı takımda bulunmuyorsunuz!", 400);
+                            }
+                        }
+                    }
+                }
+                return $this->apiResponse([], "derdin ne", 200);
+            } else {
+                return $this->apiResponse(null, "Maç henüz bitmedi veya maç sonucunu onaylamak için geç kaldınız!.", 400);
+
+            }
+        }
 
     }
+

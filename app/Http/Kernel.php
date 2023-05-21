@@ -67,5 +67,6 @@ class Kernel extends HttpKernel
         'loginMiddleware' => \App\Http\Middleware\Api\LoginMiddleware::class,
         'priceMiddleware' => \App\Http\Middleware\Api\PriceMiddlleware::class,
         'orderMiddleware' => \App\Http\Middleware\Api\OrderMiddleware::class,
+        'checkUserforOrderUpdate'=>\App\Http\Middleware\Api\OrderUpdateMiddleware::class,
     ];
 }

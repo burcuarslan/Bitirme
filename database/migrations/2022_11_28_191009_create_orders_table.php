@@ -19,6 +19,12 @@ return new class extends Migration
             $table->integer('providerId')->unsigned();
             $table->integer('priceId')->unsigned();
             $table->enum('status', ['pending', 'inProgress', 'completed', 'canceled'])->default('pending');
+            $table->integer('providerKills')->default(0)->nullable();
+            $table->integer('providerDeaths')->default(0)->nullable();
+            $table->integer('providerAssists')->default(0)->nullable();
+            $table->integer('providerBodyShots')->default(0)->nullable();
+            $table->integer('providerLegShots')->default(0)->nullable();
+            $table->integer('providerHeadShots')->default(0)->nullable();
             $table->dateTime('createdAt')->nullable();
             $table->dateTime('completedAt')->nullable();
             $table->dateTime('canceledAt')->nullable();

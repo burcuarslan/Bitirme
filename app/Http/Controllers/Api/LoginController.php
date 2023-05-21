@@ -69,7 +69,7 @@
             return $this->apiResponse([
                                           'access_token' => $token,
                                           'token_type'   => 'bearer',
-                                          'expires_in'   => auth()->factory()->getTTL() * 60*24,
+                                          'expires_in'   => auth()->factory()->getTTL() * 60,
                                           //                                             'eMailVerify'  => auth()->user()->eMailVerify == 1,
                                       ], 'Login successfully', 200);
 

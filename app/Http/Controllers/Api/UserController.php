@@ -97,7 +97,7 @@
          *
          *
          */
-        public function update(Request $request, user $user)
+        public function update(Request $request)
         {
             try {
                 $user = JWTAuth::parseToken()->authenticate();

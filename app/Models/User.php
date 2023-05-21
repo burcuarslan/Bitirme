@@ -33,7 +33,7 @@
          * @var array<int, string>
          */
         protected $hidden = [
-//            'password',
+            'password',
             'remember_token',
         ];
 
@@ -48,7 +48,7 @@
 
         public function orders()
         {
-            return $this->hasMany('App\Models\Order');
+            return $this->belongsTo('App\Models\Order');
         }
 
         public function statistic()
