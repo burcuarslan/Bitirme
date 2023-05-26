@@ -13,7 +13,7 @@
         {
             $validator = Validator::make($request->toArray(), [
                 'providerId'  => 'required|integer|exists:users,id',
-                'recipientId' => 'required|integer|exists:users,id',
+//                'recipientId' => 'required|integer|exists:users,id',
                 'priceId'     => 'required|integer|exists:prices,id',
                 'description' => 'string',
 

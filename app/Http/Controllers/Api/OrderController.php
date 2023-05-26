@@ -8,6 +8,8 @@
     use Exception;
     use Illuminate\Http\Request;
     use App\Http\Enum\OrderStatus;
+    use PhpParser\Node\Expr\List_;
+    use Tymon\JWTAuth\Exceptions\JWTException;
     use Tymon\JWTAuth\Facades\JWTAuth;
 
 
@@ -17,7 +19,7 @@
         public function __construct()
         {
             $this->middleware('orderMiddleware')->only('store');
-            $this->middleware('checkUserforOrderUpdate')->only('updateOrder');
+//            $this->middleware('checkUserforOrderUpdate')->only('updateOrder');
         }
 
         /**
@@ -42,8 +44,14 @@
          */
         public function store(Request $request)
         {
+            try {
+                $jwt = JWTAuth::parseToken()->authenticate();
+
+            } catch (JWTException $e) {
+                return $this->apiResponse(null, $e->getMessage(), 400);
+            }
             $order              = new Order();
-            $order->recipientId = $request->recipientId;
+            $order->recipientId = $jwt->id;
             $order->providerId  = $request->providerId;
             $order->priceId     = $request->priceId;
             $order->status      = OrderStatus::PENDING;
