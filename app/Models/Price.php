@@ -45,6 +45,17 @@ class Price extends Model
         return $allPrices;
     }
 
+    public static function meWithoutAllPrices($userId)
+    {
+        $allPrices=DB::table('prices')
+            ->join('users', 'users.id', '=', 'prices.providerId')
+            ->join('match_categories', 'match_categories.id', '=', 'prices.categoryId')
+            ->select('prices.*', 'users.userName as providerName', 'match_categories.categoryName as categoryName')
+            ->whereNot('prices.providerId', $userId)
+            ->get();
+        return $allPrices;
+    }
+
     public static function getByPriceCount($userId)
     {
         try {

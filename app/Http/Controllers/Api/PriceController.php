@@ -24,8 +24,14 @@
          */
         public function index()
         {
+            try {
+                $jwt = JWTAuth::parseToken()->authenticate();
 
-            return $this->apiResponse(Price::getAllPrices(), 'Prices listed successfully', 200);
+            } catch (JWTException $e) {
+                return $this->apiResponse(null, $e->getMessage(), 400);
+            }
+
+            return $this->apiResponse(Price::meWithoutAllPrices($jwt->id), 'Prices listed successfully', 200);
         }
 
         /**

@@ -31,3 +31,4 @@
     Route::put('updateOrder',[App\Http\Controllers\Api\OrderController::class, 'updateOrder']);
 
     Route::post('getMatchResult', 'App\Http\Controllers\Api\ValorantApiController@getMatchResult');
+    Route::get('ordersRequest', 'App\Http\Controllers\Api\OrderController@ordersRequest');

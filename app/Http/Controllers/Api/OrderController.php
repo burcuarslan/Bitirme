@@ -29,7 +29,6 @@
          */
         public function index()
         {
-
                 $user = JWTAuth::parseToken()->authenticate();
                 $orders = Order::where('recipientId', $user->id)->with('user')->with('price')->get();
                 return $this->apiResponse($orders, 'Orders listed successfully', 200);
@@ -101,6 +100,19 @@
             }
 
 
+        }
+
+        public function ordersRequest(Request $request)
+        {
+            try {
+                $user = JWTAuth::parseToken()->authenticate();
+            }
+            catch (JWTException $e) {
+                return $this->apiResponse(null, $e->getMessage(), 400);
+            }
+
+            $orders = Order::where('providerId', $user->id)->with('user')->with('price')->get();
+            return $this->apiResponse($orders, 'Orders listed successfully', 200);
         }
 
         /**
