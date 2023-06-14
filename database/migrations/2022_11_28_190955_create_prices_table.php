@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->integer('providerId')->unsigned();
             $table->integer('categoryId')->unsigned();
+            $table->boolean('isActive')->default(true);
 //            $table->integer('pricePerMinute');
 //            $table->integer('priceSecond');
             $table->decimal('price', 10, 2);

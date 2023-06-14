@@ -32,3 +32,5 @@
 
     Route::post('getMatchResult', 'App\Http\Controllers\Api\ValorantApiController@getMatchResult');
     Route::get('ordersRequest', 'App\Http\Controllers\Api\OrderController@ordersRequest');
+    Route::get('getMyAdverts', 'App\Http\Controllers\Api\UserController@getMyAdverts');
+    Route::post('getUpdateAdverts', 'App\Http\Controllers\Api\UserController@getUpdateAdverts');

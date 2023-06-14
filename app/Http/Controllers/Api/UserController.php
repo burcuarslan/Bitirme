@@ -8,6 +8,7 @@
     use Exception;
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\App;
+    use Symfony\Component\Process\Process;
     use Tymon\JWTAuth\Exceptions\JWTException;
     use Tymon\JWTAuth\Facades\JWTAuth;
 
@@ -130,5 +131,28 @@
         public function destroy(user $user)
         {
             //
+        }
+
+        public function getMyAdverts(Request $request){
+            $user=$this->checkJwtToken($request);
+            if($user){
+                $prices=User::getUserAdverts($user->id);
+                return $this->apiResponse($prices, 'Adverts listed successfully', 200);
+            }
+            return $this->apiResponse(null, 'User not found', 400);
+        }
+
+        public function getUpdateAdverts(Request $request){
+            $user=$this->checkJwtToken($request);
+//            dd($user->id);
+            if($user!=null){
+                $prices=Price::getById($user->id,$request->id);
+//                dd($prices->id);
+                $result=Price::updatePrice($prices,$request->isActive);
+//                $prices->isActive=$request->isActive;
+//                $prices->save();
+                return $this->apiResponse($result, 'Adverts updated successfully', 200);
+            }
+            return $this->apiResponse(null, 'User not found', 400);
         }
     }

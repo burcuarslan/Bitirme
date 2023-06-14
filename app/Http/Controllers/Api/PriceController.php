@@ -54,7 +54,7 @@
             $price->providerId = $jwt->id;
             $price->categoryId = $request->categoryId;
 
-            $price->price          = $request->price;
+            $price->price          = $request->price? $request->price : 0;
             $isSuccess             = $price->save();
             if ($isSuccess) {
                 return $this->apiResponse($price, 'Price created successfully', 200);

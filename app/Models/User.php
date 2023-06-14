@@ -6,6 +6,7 @@
     use Illuminate\Database\Eloquent\Factories\HasFactory;
     use Illuminate\Foundation\Auth\User as Authenticatable;
     use Illuminate\Notifications\Notifiable;
+    use Illuminate\Support\Facades\DB;
     use Laravel\Sanctum\HasApiTokens;
     use Tymon\JWTAuth\Contracts\JWTSubject;
 
@@ -77,5 +78,15 @@
                 'userID'      => $this->userID,
                 'userType'    => $this->userType,
             ];
+        }
+
+        public static function getUserAdverts($userId){
+            $allPrices = DB::table('users')
+                           ->join('prices', 'prices.providerId', '=', 'users.id')
+                           ->join('match_categories', 'match_categories.id', '=', 'prices.categoryId')
+                           ->where('users.id', $userId)
+                           ->select('prices.*', 'users.userName as providerName', 'match_categories.categoryName as categoryName')
+                           ->get();
+            return $allPrices??null;
         }
     }
